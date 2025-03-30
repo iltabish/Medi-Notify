@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediNotify - Dashboard</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to right, #ffdde1, #ee9ca7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+              max-width: 900px;
+              background-color: #ffffff;
+              padding: 25px;
+              border-radius: 10px;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+              position: relative;
+              text-align: center;
+        }
+
+
+        body::before {
+             content: "⚕️ + 💊 + 🏥 + 🩺";
+             position: absolute;
+             font-size: 100px;
+             opacity: 0.05;
+             top: 20%;
+             left: 10%;
+             pointer-events: none;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+        }
+        button {
+            background-color: #1976D2;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #1558a3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #1976D2;
+            color: white;
+        }
+        .delete-btn {
+            background-color: red;
+            color: white;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Welcome to MediNotify</h2>
+
+
+    <form id="medicineForm">
+        <input type="text" id="medicineName" placeholder="Medicine Name" required />
+        <input type="text" id="dosage" placeholder="Dosage" required />
+        <input type="time" id="exactTime" required />
+        <select id="startDay" required>
+            <option value="Sunday">Sunday</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+        </select>
+        <select id="endDay" required>
+            <option value="Sunday">Sunday</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+        </select>
+        <button type="submit">Add Medicine</button>
+    </form>
+
+    
+    <table id="scheduleTable">
+        <thead>
+            <tr>
+                <th>Medicine Name</th>
+                <th>Dosage</th>
+                <th>Exact Time</th>
+                <th>Start Day</th>
+                <th>End Day</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+     let userData;
+     document.addEventListener('DOMContentLoaded',()=>{
+     userData = JSON.parse(localStorage.getItem('userData'));
+    console.log(userData.email);
+    const fetchData = async ()=>{
+            try{
+                const response = await fetch(`http://localhost:3000/get-medicines?email=${userData.email}`);
+                const data =await response.json();
+                data.forEach(med => {
+            addRow(med);
+        });
+            }                                                                                                                                                                                                                           
+        catch(error){
+            console.log("error");
+        }
+    };
+    fetchData();
+});
+    document.getElementById('medicineForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        // Get form data
+        const med = {
+            email: userData.email,
+            medicineName: document.getElementById('medicineName').value,
+            dosage: document.getElementById('dosage').value,
+            exactTime: document.getElementById('exactTime').value,
+            startDay: document.getElementById('startDay').value,
+            endDay: document.getElementById('endDay').value
+        };
+
+        
+      
+      //Data saved at database
+      fetch('http://localhost:3000/save',{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(med)
+      }).then(response => response.json())
+      .then(data =>{
+        if(data.success){
+            med.id = data.id;
+            addRow(med);
+            alert('Data saved successfully!');
+        }else{
+            alert('Failed to save data');
+        }
+      }) 
+      .catch(error =>{
+        console.error('Error:' ,error);
+      });
+
+    
+        document.getElementById('medicineForm').reset();
+    });
+   
+
+       async function deleteMedicine(button) {
+    const row = button.parentElement.parentElement;
+    const id = button.getAttribute('data-id'); 
+
+    if (!id) {
+        alert('Invalid row!');
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:3000/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id }) 
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            row.remove(); 
+            alert('Medicine deleted successfully');
+        } else {
+            alert('Failed to delete medicine');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while deleting');
+    }
+}
+
+
+    function addRow(med) {
+        const tableBody = document.getElementById('tableBody');
+        let row = tableBody.insertRow();
+
+        row.innerHTML = `
+            <td>${med.medicineName}</td>
+            <td>${med.dosage}</td>
+            <td>${med.exactTime}</td>
+            <td>${med.startDay}</td>
+            <td>${med.endDay}</td>
+            <td>
+                <button class="delete-btn" onclick="deleteMedicine(this)" data-id="${med.id}">Delete</button>
+            </td>
+        `;
+    }
+</script>
+
+</body>
+</html>

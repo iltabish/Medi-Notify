@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase OTP Authentication</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .otp-container {
+            width: 320px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #recaptcha-container {
+            margin-top: 10px;
+        }
+        p {
+            font-size: 14px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="otp-container">
+        <h2>Phone OTP Authentication</h2>
+        <input type="text" id="phoneNumber" placeholder="+91XXXXXXXXXX">
+        
+        <div id="recaptcha-container"></div> 
+
+        <button id="sendOTP" onclick="sendOTP()">Send OTP</button>
+
+      
+        <input type="text" id="otpCode" placeholder="Enter OTP">
+        <button onclick="verifyOTP()">Verify OTP</button>
+
+        <p id="message"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvxxULxKhntM9rDEQUMmXDztKvRHU7kq8",
+            authDomain: "medi-notify-f3874.firebaseapp.com",
+            projectId: "medi-notify-f3874",
+            storageBucket: "medi-notify-f3874.firebasestorage.app",
+            messagingSenderId: "416274971234",
+            appId: "1:416274971234:web:ca407091aedbeb1394af3b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+            size: "normal", 
+            callback: function(response) {
+                console.log("reCAPTCHA solved:", response);
+            }
+        });
+        recaptchaVerifier.render();
+        
+        window.auth = auth;
+        window.signInWithPhoneNumber = signInWithPhoneNumber;
+    </script>
+
+    <script>
+         let userData;
+         document.addEventListener('DOMContentLoaded', () => {
+             userData = JSON.parse(localStorage.getItem('userData'));
+         });
+
+        function sendOTP() {
+            const phoneNumber = document.getElementById("phoneNumber").value.trim();
+
+            if (!phoneNumber.startsWith("+")) {
+                alert("Enter a valid phone number with country code (e.g., +91XXXXXXXXXX) & ensure to do recaptcha then ask for otp");
+                return;
+            }
+            
+
+          
+
+            signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
+                .then((confirmationResult) => {
+                    window.confirmationResult = confirmationResult;
+                    alert("OTP Sent!");
+                })
+                .catch((error) => {
+                    alert("Error sending OTP: " + error.message);
+                });
+        }
+
+        async function verifyOTP() {
+            const otpCode = document.getElementById("otpCode").value;
+            const phoneNumber = document.getElementById("phoneNumber").value.trim();
+
+            if (!window.confirmationResult) {
+                alert("No OTP request found. Please request OTP again.");
+                return;
+            }
+
+            try {
+                await window.confirmationResult.confirm(otpCode);
+                alert("OTP Verified!");
+
+                let userData = JSON.parse(localStorage.getItem('userData')) || {};
+                userData.phoneNumber = phoneNumber;
+
+                try {
+                    const response = await fetch("http://localhost:3000/saveNewUser", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(userData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        window.location.href = "dashboard.html"; 
+                    } else {
+                        alert("Some error occurred. Redirecting to home page...");
+                        window.location.href = "index.html"; 
+                    }
+                } catch {
+                    alert("Some error occurred while saving user data!");
+                    window.location.href="index.html";
+                }
+            } catch (error) {
+                alert("Invalid OTP!");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medi Notify</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav id="navbar">
+        <div id="logo">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 2L22 6M2 22L16 8M7.5 10.5L13.5 16.5M10 2H14M12 2V6M19.79 14.79A2.5 2.5 0 1 1 17 12.21"></path>
+            </svg>
+        </div>
+        
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">About</a></li>
+        </ul>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home">
+        <h1 class="h1-primary">Welcome to Medi Notify</h1>
+        <p>Your best modern web experience starts here.</p>
+        <div class="button-container">
+            <button class="btn" onclick="openLoginModal()">Get Notified</button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="center">
+            Copyright &copy; www.myMediNotify.com. All rights reserved!
+        </div>
+    </footer>
+
+    
+
+     <!-- Login Modal -->
+     <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="container">
+                <h2>Welcome Back!</h2>
+                <div id="g_id_onload"
+                     data-client_id="578639325026-19vmbstn4h5boaicpast448t01vfkfib.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse">
+                </div>
+                <div class="g_id_signin" data-type="standard"></div>
+            </div>
+        </div>
+    </div>
+    
+
+    <script>
+
+        const modal = document.getElementById("loginModal");
+        const closeBtn = document.querySelector(".close");
+
+        // Function to Open Modal
+        function openLoginModal() {
+            modal.style.display = "flex";
+        }
+
+        // Function to Close Modal
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        // Close Modal if Clicked Outside
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        async function handleCredentialResponse(response) {
+    try {
+        const res = await fetch("http://localhost:3000/verify-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: response.credential }),
+        });
+
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status} ${res.statusText}`);
+        }
+
+        const data = await res.json();
+
+        if (data.redirect) {
+            localStorage.setItem("userData", JSON.stringify(data.user));
+            window.location.href = data.redirect;
+        } else if (data.user) {
+            localStorage.setItem("userData", JSON.stringify(data.user));
+            window.location.href = "dashboard.html";
+        } else if (data.error) {
+            alert(data.error);
+        } else {
+            alert("Unexpected response from server.");
+        }
+    } catch (error) {
+        alert("An error occurred. Please check the console for details.");
+    }
+}
+
+
+    </script>
+
+</body>
+</html>
