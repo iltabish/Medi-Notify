@@ -67,7 +67,7 @@
 
       
         <input type="text" id="otpCode" placeholder="Enter OTP">
-        <button onclick="verifyOTP()">Verify OTP</button>
+        <button onclick="verifyOTP()"  id="verifyOtp">Verify OTP</button>
 
         <p id="message"></p>
     </div>
@@ -108,19 +108,24 @@
 
         function sendOTP() {
             const phoneNumber = document.getElementById("phoneNumber").value.trim();
+            //const sendBtn = document.getElementById("sendOtp");
 
             if (!phoneNumber.startsWith("+")) {
                 alert("Enter a valid phone number with country code (e.g., +91XXXXXXXXXX) & ensure to do recaptcha then ask for otp");
                 return;
             }
             
-
+            // sendBtn.innerText = "Processing...";
+            // sendBtn.disabled = true;
+ 
           
 
             signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
                 .then((confirmationResult) => {
                     window.confirmationResult = confirmationResult;
                     alert("OTP Sent!");
+                    // sendBtn.innerText = "Send OTP";
+                    // sendBtn.disabled = false;
                 })
                 .catch((error) => {
                     alert("Error sending OTP: " + error.message);
@@ -135,10 +140,16 @@
                 alert("No OTP request found. Please request OTP again.");
                 return;
             }
+            
+
+         
+
 
             try {
                 await window.confirmationResult.confirm(otpCode);
                 alert("OTP Verified!");
+
+                
 
                 let userData = JSON.parse(localStorage.getItem('userData')) || {};
                 userData.phoneNumber = phoneNumber;

@@ -6,10 +6,13 @@ const { OAuth2Client } = require("google-auth-library");
 const mysql=require("mysql2");
 const cron = require("node-cron");
 const twilio = require("twilio");
+const nodemailer = require('nodemailer');
 
 // Twilio Credentials
-const twilioClient = twilio("ACa7e192489c0255146032b656b9eaa8fa", "e0daa015d84aa4863f47a5024b7ef952");
+const twilioClient = twilio("ACa7e192489c0255146032b656b9eaa8fa", "30785fa074db6bcc699407b16ea51454");
 const TWILIO_PHONE_NUMBER = "+16506754098";
+
+
 
 
 const db=mysql.createConnection({
@@ -28,7 +31,7 @@ const PORT = process.env.PORT || 3000;
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Allowed origins (front-end URLs)
-const allowedOrigins = ['http://127.0.0.1:5500', 'http://localhost:3000'];
+const allowedOrigins = ['http://127.0.0.1:5500', 'http://localhost:3000' , 'https://snazzy-moxie-5d7d91.netlify.app/'];
 
 app.use(
   cors({
@@ -68,6 +71,37 @@ function sendSMS(phoneNumber, name, medicine, dosage) {
       .catch(error => console.error("SMS Error:", error));
 }
 
+
+
+
+
+async function sendEmail(name, toEmail, medicine, dosage) {
+  console.log("Script started");
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'iltabishkhan30@gmail.com',
+      pass: 'kzufqpdkfwdwhjsf'  
+    }
+  });
+
+  const mailOptions = {
+    from: 'iltabishkhan30@gmail.com',
+    to: toEmail,
+    subject: `Medicine Reminder for ${name}`,
+    text: `Hello ${name},\n\nIt's time to take your medicine: ${medicine}.\nDosage: ${dosage}.\n\nTake care! 🙂`
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', info.response);
+  } catch (err) {
+    console.log('Error:', err);
+  }
+}
+
+
 // Cron Job to Check & Send Reminders (Runs Every Minute)
 cron.schedule("* * * * *", () => {
   const now = new Date();
@@ -78,12 +112,11 @@ cron.schedule("* * * * *", () => {
   console.log(`Checking at: ${currentTime}, Day: ${currentDayNum}`);
 
   const query = `
-      SELECT users.name, users.phone_number, medicines.medicineName, medicines.dosage, medicines.exactTime, 
+      SELECT users.name, users.email,users.phone_number, medicines.medicineName, medicines.dosage, medicines.exactTime, 
              medicines.startDay, medicines.endDay 
       FROM medicines
       JOIN users ON medicines.email = users.email
   `;
-
   db.query(query, (err, results) => {
       if (err) {
           console.error("Database Query Error:", err);
@@ -94,13 +127,12 @@ cron.schedule("* * * * *", () => {
           const startDayNum = getDay(reminder.startDay);
           const endDayNum = getDay(reminder.endDay);
           
-
           if (isDayInRange(currentDayNum, startDayNum, endDayNum) && reminder.exactTime === currentTime) {
             const cleanedPhoneNumber = reminder.phone_number.replace(/\s+/g, "");
           
             sendSMS(cleanedPhoneNumber, reminder.name, reminder.medicineName, reminder.dosage);
+            sendEmail(reminder.name,reminder.email,reminder.medicineName,reminder.dosage);
         }
-        
       });
   });
 });
