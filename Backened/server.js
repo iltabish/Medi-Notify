@@ -78,7 +78,20 @@ const PORT = process.env.PORT || 3000;
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Allowed origins (front-end URLs)
-const allowedOrigins = ['http://127.0.0.1:5500', 'http://localhost:3000' , 'https://snazzy-moxie-5d7d91.netlify.app/'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+  })
+);
+
 
 app.use(
   cors({
@@ -93,7 +106,9 @@ app.use(
 );
 app.use(express.json());
 
-
+app.get("/health", (req, res) => {
+  res.send("OK");
+});
 function getDay(weekday) {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   return days.indexOf(weekday);
@@ -207,7 +222,9 @@ app.post("/verify-token", async (req, res) => {
 
     // Call checkEmail API
     try {
-      const response = await fetch('http://medi-notify.onrender.com/checkEmail', {
+      const backendURL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+
+      const response = await fetch(`${backendURL}/checkEmail`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -321,6 +338,8 @@ app.delete('/delete', (req, res) => {
   });
 });
 
+
+
 app.listen(PORT, () => {
-  console.log(`Server running at: http://medi-notify.onrender.com:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
