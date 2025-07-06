@@ -9,22 +9,69 @@ const twilio = require("twilio");
 const nodemailer = require('nodemailer');
 
 // Twilio Credentials
-const twilioClient = twilio("ACa7e192489c0255146032b656b9eaa8fa", "30785fa074db6bcc699407b16ea51454");
-const TWILIO_PHONE_NUMBER = "+16506754098";
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 
 
 
-const db=mysql.createConnection({
-  host:'localhost',
-  user: 'root',
-  password: 'Laddu21@',
-  database: 'medinotify'
+
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME
 });
-db.connect((err)=>{
-  if(err)throw err;
-  console.log('finally mysql connected');
+db.connect((err) => {
+  if (err) throw err;
+  console.log("Connected to Clever Cloud MySQL!");
+
+  // Create `users` table
+  const createUsersTable = `
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      phone_number VARCHAR(15)
+    )
+  `;
+
+  // Create `medicines` table
+  const createMedicinesTable = `
+    CREATE TABLE IF NOT EXISTS medicines (
+      id INT NOT NULL AUTO_INCREMENT,
+      email VARCHAR(255) NOT NULL,
+      medicineName VARCHAR(255) DEFAULT NULL,
+      dosage VARCHAR(255) DEFAULT NULL,
+      exactTime VARCHAR(255) DEFAULT NULL,
+      startDay VARCHAR(255) DEFAULT NULL,
+      endDay VARCHAR(255) DEFAULT NULL,
+      PRIMARY KEY (id)
+    )
+  `;
+
+  // Execute both queries
+  db.query(createUsersTable, (err, result) => {
+    if (err) throw err;
+    console.log("'users' table created or already exists.");
+
+    db.query(createMedicinesTable, (err, result) => {
+      if (err) throw err;
+      console.log("'medicines' table created or already exists.");
+    });
+  });
 });
+
+
+
+
+
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
