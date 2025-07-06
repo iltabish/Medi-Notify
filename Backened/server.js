@@ -78,12 +78,12 @@ const PORT = process.env.PORT || 3000;
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Allowed origins (front-end URLs)
-const allowedOrigins = ['http://127.0.0.1:5500', 'http://localhost:3000' , 'https://snazzy-moxie-5d7d91.netlify.app/'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (allowedOrigins.includes(origin) || !origin) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -91,6 +91,7 @@ app.use(
     },
   })
 );
+
 app.use(express.json());
 
 
@@ -207,7 +208,8 @@ app.post("/verify-token", async (req, res) => {
 
     // Call checkEmail API
     try {
-      const response = await fetch('http://medi-notify.onrender.com/checkEmail', {
+      const backendURL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+      const response = await fetch(`${process.env.BACKEND_URL}/checkEmail`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
