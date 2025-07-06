@@ -146,7 +146,7 @@
     console.log(userData.email);
     const fetchData = async ()=>{
             try{
-                const response = await fetch(`http://localhost:3000/get-medicines?email=${userData.email}`);
+                const response = await fetch(`http://medi-notify.onrender.com/get-medicines?email=${userData.email}`);
                 const data =await response.json();
                 data.forEach(med => {
             addRow(med);
@@ -174,7 +174,7 @@
         
       
       //Data saved at database
-      fetch('http://localhost:3000/save',{
+      fetch('http://medi-notify.onrender.com/save',{
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -209,7 +209,7 @@
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/delete`, {
+        const response = await fetch(`http://medi-notify.onrender.com/delete`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'

@@ -207,7 +207,7 @@ app.post("/verify-token", async (req, res) => {
 
     // Call checkEmail API
     try {
-      const response = await fetch('http://localhost:3000/checkEmail', {
+      const response = await fetch('http://medi-notify.onrender.com/checkEmail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -322,5 +322,5 @@ app.delete('/delete', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at: http://localhost:${PORT}`);
+  console.log(`Server running at: http://medi-notify.onrender.com:${PORT}`);
 });
