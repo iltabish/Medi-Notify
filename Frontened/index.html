@@ -19,8 +19,6 @@
         
         <ul>
             <li><a href="#">Home</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#">About</a></li>
         </ul>
     </nav>
 
@@ -82,7 +80,7 @@
 
         async function handleCredentialResponse(response) {
     try {
-        const res = await fetch("http://localhost:3000/verify-token", {
+        const res = await fetch("https://medi-notify.onrender.com/verify-token", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: response.credential }),
