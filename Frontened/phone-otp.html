@@ -157,7 +157,7 @@
                 userData.phoneNumber = phoneNumber;
 
                 try {
-                    const response = await fetch("http://localhost:3000/saveNewUser", {
+                    const response = await fetch("https://medi-notify.onrender.com/saveNewUser", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(userData)

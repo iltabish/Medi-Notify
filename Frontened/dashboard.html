@@ -214,7 +214,7 @@
 
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/get-medicines?email=${userData.email}`);
+        const response = await fetch(`https://medi-notify.onrender.com/get-medicines?email=${userData.email}`);
         const data = await response.json();
         data.forEach(med => addRow(med));
       } catch (error) {
@@ -234,7 +234,7 @@
       startDay: document.getElementById('startDay').value,
       endDay: document.getElementById('endDay').value
     };
-    fetch('http://localhost:3000/save', {
+    fetch('https://medi-notify.onrender.com/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(med)
@@ -256,7 +256,7 @@
     const id = button.getAttribute('data-id');
     if (!id) return alert('Invalid row!');
     try {
-      const response = await fetch(`http://localhost:3000/delete`, {
+      const response = await fetch(`https://medi-notify.onrender.com/delete`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
