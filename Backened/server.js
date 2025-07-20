@@ -129,13 +129,13 @@ async function sendEmail(name, toEmail, medicine, dosage) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'iltabishkhan30@gmail.com',
-      pass: 'kzufqpdkfwdwhjsf'  
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD
     }
   });
 
   const mailOptions = {
-    from: 'iltabishkhan30@gmail.com',
+    from: process.env.GMAIL_USER,
     to: toEmail,
     subject: `Medicine Reminder for ${name}`,
     text: `Hello ${name},\n\nIt's time to take your medicine: ${medicine}.\nDosage: ${dosage}.\n\nTake care! 🙂`
@@ -145,7 +145,7 @@ async function sendEmail(name, toEmail, medicine, dosage) {
     const info = await transporter.sendMail(mailOptions);
     console.log('Email sent:', info.response);
   } catch (err) {
-    console.log('Error:', err);
+    console.error('Error:', err);
   }
 }
 
